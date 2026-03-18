@@ -22,6 +22,8 @@ In search.py, you will implement generic search algorithms which are called by P
 """
 
 import pacman.util as util
+from pacman.engine import GameState
+from pacman.game import Actions
 
 
 class SearchProblem:
@@ -36,6 +38,8 @@ class SearchProblem:
         """
         Returns the start state for the search problem.
         """
+        GameState.get_pacman_position
+
         util.raise_not_defined()
 
     def is_goal_state(self, state):
@@ -92,20 +96,98 @@ def depth_first_search(problem: SearchProblem):
     print("Is the start a goal?", problem.is_goal_state(problem.get_start_state()))
     print("Start's successors:", problem.get_successors(problem.get_start_state()))
     """
-    # TODO: Implement depth-first graph search using util.Stack
-    util.raise_not_defined()
+
+    visited = set()
+    stack = util.Stack()
+    start_node = problem.get_start_state()
+
+    if problem.is_goal_state(start_node):
+        return []
+    
+    stack.push((start_node,[]))
+
+    while stack.is_empty() != True:
+        state, path = stack.pop()
+
+        if state in visited:
+            continue
+        
+        visited.add(state)
+
+        if problem.is_goal_state(state):
+            return path  # we have reached the goal node
+        
+        for successor, action, step_cost in problem.get_successors(state):
+            if successor not in visited:
+                stack.push((successor, path + [action]))
+    #util.raise_not_defined()
+    return []
+
 
 
 def breadth_first_search(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     # TODO: Implement breadth-first graph search using util.Queue
-    util.raise_not_defined()
+
+    visited = set()
+    queue = util.Queue()
+    start_state = problem.get_start_state()
+
+    if problem.is_goal_state(start_state):
+        return []
+    queue.push((start_state,[]))
+
+    while not queue.is_empty():
+        state, path = queue.pop()
+
+        if state in visited:
+            continue
+
+        visited.add(state)
+
+        if problem.is_goal_state(state):
+            return path
+        
+        for successor, action, cost in problem.get_successors(state):
+            if successor not in visited:
+                queue.push((successor, path + [action]))
+
+    #util.raise_not_defined()
+    return []
 
 
 def uniform_cost_search(problem: SearchProblem):
     """Search the node of least total cost first."""
     # TODO: Implement uniform-cost graph search using util.PriorityQueue
-    util.raise_not_defined()
+    p_Queue = util.PriorityQueue()
+    start_state = problem.get_start_state()
+    visited_cost = {start_state : 0}
+    
+    if problem.is_goal_state(start_state):
+        return []
+    
+    p_Queue.push((start_state,[],0), 0)
+
+    while not p_Queue.is_empty():
+        state, path, path_cost = p_Queue.pop()
+
+        if state in visited_cost and visited_cost[state] < path_cost:
+            continue
+
+        if problem.is_goal_state(state):
+            return path
+
+        """lowest_item = min(p_Queue, key = lambda x: x[1])
+        item_to_expand = lowest_item[0]"""
+
+        for successor, action, cost in problem.get_successors(state):
+            new_cost = path_cost + cost
+            if successor not in visited_cost or visited_cost[successor] > new_cost:
+                visited_cost[successor] = new_cost
+                p_Queue.push((successor, path + [action], new_cost),new_cost)
+
+    #util.raise_not_defined()
+    return []
 
 
 def null_heuristic(state, problem=None):
@@ -119,7 +201,36 @@ def null_heuristic(state, problem=None):
 def a_star_search(problem: SearchProblem, heuristic=null_heuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     # TODO: Implement A* graph search using util.PriorityQueue with f(n) = g(n) + h(n)
-    util.raise_not_defined()
+
+    p_Queue = util.PriorityQueue()
+    start_state = problem.get_start_state()
+    visited_cost = {start_state: 0}
+
+    if problem.is_goal_state(start_state):
+        return []
+    
+    p_Queue.push((start_state, [], 0, 0),0)
+    
+    while not p_Queue.is_empty():
+        state, path, path_cost, f_x = p_Queue.pop()
+
+        if state in visited_cost and visited_cost[state] < f_x:
+            continue
+
+        if problem.is_goal_state(state):
+            return path
+        
+
+        for successor, action, cost in problem.get_successors(state):
+            h_x = heuristic(successor,problem)
+            g_x = path_cost + cost
+            f_x = g_x + h_x
+            if successor not in visited_cost or visited_cost[successor] > f_x:
+                visited_cost[successor] = f_x
+                p_Queue.push((successor, path + [action], g_x, f_x),f_x)
+
+    #util.raise_not_defined()
+    return []
 
 
 # Abbreviations
